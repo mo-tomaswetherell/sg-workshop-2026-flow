@@ -9,15 +9,14 @@ import torch
 import numpy as np
 import xarray as xr
 
-from flow.transforms import Transform
-from flow.datasets import BaseDataset
-from flow.config.schema import FlowMatchingConfig, CoupledSourceConfig
+from src.transforms import Transform
+from src.config.schema import FlowMatchingConfig, CoupledSourceConfig
 
 
 logger = logging.getLogger(__name__)
 
 
-class V3Dataset(BaseDataset):
+class V3Dataset(torch.utils.data.Dataset):
     """V3 Dataset class."""
 
     SPATIAL_DIMS = ("lat", "lon")

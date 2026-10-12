@@ -16,3 +16,4 @@ dependencies:
   - ipykernel
   - nc-time-axis
   - einops
+  - colormaps

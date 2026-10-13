@@ -4,6 +4,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import math
 
 plt.rcParams["font.family"] = "DejaVu Sans Mono"
 
@@ -168,10 +169,10 @@ def plot_target_vs_predictions(
 
     # (title, data, row, col) for each panel
     panels = [("Target", target, 0, 0)] + [
-        (f"(Sample {i}", pred.isel(sample=i), i // sample_cols, 1 + i % sample_cols)
+        (f"Sample {i}", pred.isel(sample=i), i // sample_cols, 1 + i % sample_cols)
         for i in range(n_samples)
     ]
-    occupied = {(row, col) for _, _, row, col in panels
+    occupied = {(row, col) for _, _, row, col in panels}
 
     fig, axes = plt.subplots(
         nrows,
@@ -195,11 +196,11 @@ def plot_target_vs_predictions(
         ax.set_title(title)
         ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
 
-        gl = ax.gridline(draw_labels=True, alpha=0.05, colour="black")
-        gl.top_labels = False
-        gl.right_labels = False
-        gl.left_labels = (row, col - 1) not in occupied # true for panels with nothing to the left
-        gl.bottom_labels = (row + 1, col) not in occupied # true for panels with nothing below
+        is_target = (row, col) == (0, 0)
+        gl = ax.gridlines(draw_labels=is_target, alpha=0.05, color="black")
+        if is_target:
+            gl.top_labels = False
+            gl.right_labels = False
         
     fig.colorbar(
         mappable,
@@ -211,7 +212,7 @@ def plot_target_vs_predictions(
         pad=0.05,
         label=units,
     )
-    fig.suptitle(str(target["time"].dt.strftime(%Y-%m-%d").values))
+    fig.suptitle(str(target["time"].dt.strftime("%Y-%m-%d").values))
 
     plt.show()
         

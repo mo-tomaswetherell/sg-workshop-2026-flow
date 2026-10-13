@@ -109,3 +109,113 @@ def plot_field(
     ax.gridlines(draw_labels=True, alpha=0.05, color="black")
 
     plt.show()
+
+def plot_target_vs_predictions(
+    ds: xr.Dataset,
+    time_idx: int,
+    variable: str = "pr",
+    input_idx: int = 0,
+    n_samples: int = 1,
+    cmap: str | object = "precip",
+    vmin: float | None = None,
+    vmax: float | None = None,
+    max_sample_cols: int = 4,
+) -> None:
+    """Plot the target alongside generated samples for a single time step.
+
+    The target is shown first, follwed by the first `n_samples` generated samples.
+    All panels share one colourbar.
+
+    Args:
+        ds: Dataset containing `pred_{variable}` (with a `sample` dimension) and
+            `target_{variable}`.
+        time_idx: Index along the `time` dimension.
+        variable: Varaible name without the `pred_`/`target_` prefix.
+        input_idx: Index along the `input` dimension.
+        n_samples: Number of generated samples to display. Must not exceed the number of
+            samples in the dataset.
+        cmap: Colourmap specifcation (see `resolve_cmap`).
+        vmin/vmax: Colour limits. Ignored for custom discrete colourmaps. Defaults to the
+            min/max across all plotted panels.
+        max_sample_cols: Maximum number of generated sample panels per row before wrapping.
+    """
+    max_samples = ds.sizes["sample"]
+    if not 1 <= n_samples <= max_samples:
+        raise ValueError(f"n_samples must be between 1 and {max_samples}, got {n_samples}.")
+
+    pred = ds[f"pred_{variable}"].isel(input=input_idx, time=time_idx, sample=slice(0, n_samples))
+    target = ds[f"target_{variable}"].isel(input=input_idx, time=time_idx)
+
+    units = ds[f"target_{variable}"].attrs.get("units", "")
+    if units == "kg m-2 s-1":
+        pred = pred * 86400
+        target = target * 86400
+        units = "mm day-1"
+
+    cmap_obj, norm = resolve_cmap(cmap)
+
+    plot_kwargs = dict(transform=ccrs.PlateCarree(), cmap=cmap_obj, add_colorbar=False)
+    if norm is not None:
+        plot_kwargs["norm"] = norm
+    else:
+        plot_kwargs["vmin"] = (vmin if vmin is not None else float(min(target.min(), pred.min())))
+        plot_kwargs["vmax"] = (vmax if vmax is not None else float(max(target.max(), pred.max())))
+
+    # Grid layout: column 0 holds only the target; samples occupy columns >=1.
+    sample_cols = min(n_samples, max_sample_cols)
+    ncols = sample_cols + 1
+    nrows = math.ceil(n_samples / sample_cols)
+
+    # (title, data, row, col) for each panel
+    panels = [("Target", target, 0, 0)] + [
+        (f"(Sample {i}", pred.isel(sample=i), i // sample_cols, 1 + i % sample_cols)
+        for i in range(n_samples)
+    ]
+    occupied = {(row, col) for _, _, row, col in panels
+
+    fig, axes = plt.subplots(
+        nrows,
+        ncols,
+        figsize = (4 * ncols, 4 * nrows),
+        subplot_kw={"projection": ccrs.PlateCarree()},
+        squeeze=False,
+        layout="constrained",
+    )
+
+    # Hide axes in column 0 below the target
+    for row in range(nrows):
+        for col in range(ncols):
+            if (row, col) not in occupied:
+                axes[row, col].set_visible(False)
+
+    mappable = None
+    for title, data, row, col in panels:
+        ax = axes[row, col]
+        mappable = data.plot(ax=ax, **plot_kwargs)
+        ax.set_title(title)
+        ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
+
+        gl = ax.gridline(draw_labels=True, alpha=0.05, colour="black")
+        gl.top_labels = False
+        gl.right_labels = False
+        gl.left_labels = (row, col - 1) not in occupied # true for panels with nothing to the left
+        gl.bottom_labels = (row + 1, col) not in occupied # true for panels with nothing below
+        
+    fig.colorbar(
+        mappable,
+        ax=axes,
+        orientation="horizontal",
+        location="bottom",
+        shrink=0.5,
+        aspect=40,
+        pad=0.05,
+        label=units,
+    )
+    fig.suptitle(str(target["time"].dt.strftime(%Y-%m-%d").values))
+
+    plt.show()
+        
+    
+
+    
+        

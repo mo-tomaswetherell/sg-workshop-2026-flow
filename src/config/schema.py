@@ -1,7 +1,9 @@
 """Pydantic models for the flow matching configuration."""
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, model_validator
 from typing import Annotated, Literal
+
+from src.dates import DateRange, parse_date_ranges
 
 
 class NormalisationSpec(BaseModel):
@@ -71,10 +73,12 @@ SchedulerConfig = Annotated[
     CondOTSchedulerConfig | PolynomialSchedulerConfig, Field(discriminator="type")
 ]
 
+DateRanges = Annotated[list[DateRange], BeforeValidator(parse_date_ranges)]
+
 
 class TrainingConfig(BaseModel):
-    years: list[str]
-    """List of year range strings (e.g., "1961-1970") or individual year strings (e.g., "2032")."""
+    date_ranges: DateRanges
+    """Inclusive date ranges used for training"""
 
     learning_rate: float
     epochs: int
@@ -112,13 +116,13 @@ class TrainingConfig(BaseModel):
 
 
 class ValidationConfig(BaseModel):
-    years: list[str]
-    """List of year range strings (e.g., "1961-1970") or individual year strings (e.g., "2032")."""
+    date_ranges: DateRanges
+    """Inclusive date ranges used for validation"""
 
 
 class TestConfig(BaseModel):
-    years: list[str]
-    """List of year range strings (e.g., "1961-1970") or individual year strings (e.g., "2032")."""
+    date_ranges: DateRanges
+    """Inclusive date ranges used for testing"""
 
 
 class ModelConfig(BaseModel):

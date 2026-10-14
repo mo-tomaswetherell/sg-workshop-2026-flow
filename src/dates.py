@@ -18,7 +18,7 @@ _DAY_LEN = len("YYYY-MM-DD")
 
 @dataclass(frozen=True)
 class DateRange:
-    """Represents a discrete temporal windo for dataset filetering
+    """Represents a discrete temporal window for dataset filtering
 
     Attributes:
         start (str): The opening bound of the time window.
@@ -65,36 +65,7 @@ class DateRange:
         return _DAY_FORMAT if len(self.start) == _DAY_LEN else _MINUTE_FORMAT
 
 
-def parse_date_ranges(items: Sequence[Sequence[str]]) -> list[DateRange]:
-    """Parse the `date_ranges` config entry into validated DateRange objects.
-
-    Expects a list of [start, end] pairs, e.g.
-        [["2050-01-01", "2059-12-30"], ["2080-03-10", "2080-03-10"]]
-
-    Args:
-        items: Sequence of two-element [start, end] sequence of strings.
-    
-    Returns:
-        Chronologically sorted lsit of DateRange objects
-    """
-    if not items:
-        raise ValueError("At least one date range must be provided.")
-
-    ranges: set[DateRange] = set()
-    for i, item in enumerate(items):
-        if isinstance(item, str) or not isinstance(item, Sequence) or len(item) != 2:
-            raise ValueError(
-                f"date_ranges[{i}] must be a [start, end] pair of strings, got {item!r}."
-            )
-        try:
-            ranges.add(DateRange(start=item[0], end=item[1]))
-        except ValueError as e:
-             raise ValueError(f"date_range[{i}]: {e}") from e
-
-    return sorted(ranges, key=lambda r: (r.start, r.end))
-        
-
-def build_time_mask(time: xr.DataArray, ranges: Sequence[DateRange]) -> np.ndarray:
+def _build_time_mask(time: xr.DataArray, ranges: Sequence[DateRange]) -> np.ndarray:
     """Boolean mask over `time`. True where time falls in any of the ranges (inclusive)."""
     mask = np.zeros(time.size, dtype=bool)
     labels: dict[str, np.ndarray] = {}
@@ -105,13 +76,14 @@ def build_time_mask(time: xr.DataArray, ranges: Sequence[DateRange]) -> np.ndarr
         mask |= (s >= r.start) & (s <= r.end)
     return mask
 
-def select_date_ranges(ds: xr.Dataset, ranges: Sequence[DateRange]) -> xr.Dataset:
-    """Returns `ds` restircted to timesteps inside any of the date ranges.
+def select_date_ranges(ds: xr.Dataset, ranges: Sequence[tuple[str, str]]) -> xr.Dataset:
+    """Returns `ds` restircted to timesteps inside any of the [start, end] ranges.
 
     Raises:
-        ValueError: If no timesteps fall within the ranges.
+        ValueError: If a range is incorrectly specified or no timesteps fall within the ranges.
     """
-    mask = build_time_mask(ds["time"], ranges)
+    date_ranges = [DateRange(start, end) for start, end in ranges]
+    mask = _build_time_mask(ds["time"], date_ranges)
     if not mask.any():
         raise ValueError(f"No timesteps fall within the date ranges: {list(ranges)}")
     return ds.isel(time=np.flatnonzero(mask))

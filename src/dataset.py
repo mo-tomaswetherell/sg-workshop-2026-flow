@@ -28,7 +28,7 @@ class V3Dataset(torch.utils.data.Dataset):
         predictors_path: str,
         targets_path: str,
         config: FlowMatchingConfig,
-        date_ranges: Sequence[DateRange],
+        date_ranges: Sequence[tuple[str, str]],
         transforms: dict[str, dict[str, Transform]],
         static_path: str | None = None,
     ):
@@ -175,7 +175,7 @@ class V3Dataset(torch.utils.data.Dataset):
                 self.ds_source = self._create_dataset(self.source, self.predictors_path, self.date_ranges)
 
     def _create_dataset(
-            self, variables: list[str], base_path: str, date_ranges: Sequence[DateRange]
+            self, variables: list[str], base_path: str, date_ranges: Sequence[tuple[str, str]]
     ) -> xr.Dataset:
         """Return an xarray dataset containing the specified variables.
 

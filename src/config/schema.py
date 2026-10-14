@@ -3,8 +3,6 @@
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 from typing import Annotated, Literal
 
-from src.dates import DateRange, parse_date_ranges
-
 
 class NormalisationSpec(BaseModel):
     name: Literal["normalisation"]
@@ -73,12 +71,11 @@ SchedulerConfig = Annotated[
     CondOTSchedulerConfig | PolynomialSchedulerConfig, Field(discriminator="type")
 ]
 
-DateRanges = Annotated[list[DateRange], BeforeValidator(parse_date_ranges)]
 
 
 class TrainingConfig(BaseModel):
-    date_ranges: DateRanges
-    """Inclusive date ranges used for training"""
+    date_ranges: list[tuple[str, str]]
+    """Inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
     learning_rate: float
     epochs: int
@@ -116,13 +113,13 @@ class TrainingConfig(BaseModel):
 
 
 class ValidationConfig(BaseModel):
-    date_ranges: DateRanges
-    """Inclusive date ranges used for validation"""
+    date_ranges: list[tuple[str, str]]
+    """Inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
 
 class TestConfig(BaseModel):
-    date_ranges: DateRanges
-    """Inclusive date ranges used for testing"""
+    date_ranges: list[tuple[str, str]]
+    """Inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
 
 class ModelConfig(BaseModel):

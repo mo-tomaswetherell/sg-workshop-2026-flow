@@ -45,7 +45,9 @@ class V3Dataset(torch.utils.data.Dataset):
 
         Raises:
             ValueError
-                CHANGE THIS   If predictor and targets time indicies are not aligned.
+                If the number of couple variables differs from the number of target variables,
+                if the static variabes are requested without a static_path, or if no timesteps
+                fall within the date ranges (or a date range is incorrectly specified).
         """
         self.predictors_path = predictors_path
         self.targets_path = targets_path
@@ -170,9 +172,13 @@ class V3Dataset(torch.utils.data.Dataset):
             self.ds_predictors = self._create_dataset(
                 self.predictors, self.predictors_path, self.date_ranges
             )
-            self.ds_targets = self._create_dataset(self.targets, self.targets_path, self.date_ranges)
+            self.ds_targets = self._create_dataset(
+                self.targets, self.targets_path, self.date_ranges
+                )
             if self.source:
-                self.ds_source = self._create_dataset(self.source, self.predictors_path, self.date_ranges)
+                self.ds_source = self._create_dataset(
+                    self.source, self.predictors_path, self.date_ranges
+                )
 
     def _create_dataset(
             self, variables: list[str], base_path: str, date_ranges: Sequence[tuple[str, str]]

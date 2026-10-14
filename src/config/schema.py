@@ -1,6 +1,6 @@
 """Pydantic models for the flow matching configuration."""
 
-from pydantic import BaseModel, BeforeValidator, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 from typing import Annotated, Literal
 
 
@@ -72,10 +72,9 @@ SchedulerConfig = Annotated[
 ]
 
 
-
 class TrainingConfig(BaseModel):
     date_ranges: list[tuple[str, str]]
-    """Inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
+    """list of inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
     learning_rate: float
     epochs: int
@@ -114,12 +113,12 @@ class TrainingConfig(BaseModel):
 
 class ValidationConfig(BaseModel):
     date_ranges: list[tuple[str, str]]
-    """Inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
+    """list of inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
 
 class TestConfig(BaseModel):
     date_ranges: list[tuple[str, str]]
-    """Inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
+    """list of inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
 
 class ModelConfig(BaseModel):

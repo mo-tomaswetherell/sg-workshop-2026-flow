@@ -77,7 +77,7 @@ def _build_time_mask(time: xr.DataArray, ranges: Sequence[DateRange]) -> np.ndar
     return mask
 
 def select_date_ranges(ds: xr.Dataset, ranges: Sequence[tuple[str, str]]) -> xr.Dataset:
-    """Returns `ds` restircted to timesteps inside any of the [start, end] ranges.
+    """Returns `ds` restricted to timesteps inside any of the [start, end] ranges.
 
     Raises:
         ValueError: If a range is incorrectly specified or no timesteps fall within the ranges.

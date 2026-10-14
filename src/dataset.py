@@ -10,7 +10,7 @@ import torch
 import numpy as np
 import xarray as xr
 
-from src.dates import DateRange, select_date_ranges
+from src.dates import select_date_ranges
 from src.transforms import Transform
 from src.config.schema import FlowMatchingConfig, CoupledSourceConfig
 

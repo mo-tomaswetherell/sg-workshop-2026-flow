@@ -276,6 +276,20 @@ def plot_target_vs_predictions(
 
     plt.show()
 
+def make_discrete_symmetric_norm(
+    lim: float, n_levels: int, cmap: str
+) -> tuple[mcolors.Colormap, mcolors.BoundaryNorm]:
+    """Fixed, discrete, symmetric colour scale spanning [-lim, lim].
+
+    Uses `n_levels` equal-width bins, plus an extra colour at each end for values beyond
+    +-lim. An odd `n_levels` gives a centre bin containing zero, which is the middle colour
+    of a diverging colourmap.
+    """
+    cmap_obj = plt.get_cmap(cmap, n_levels + 2)  # +2 for the two extension colours
+    bounds = np.linspace(-lim, lim, n_levels + 1)
+    norm = mcolors.BoundaryNorm(bounds, cmap_obj.N, extend="both")
+    return cmap_obj, norm
+
 def animate_sampling(
     states: np.ndarray,
     velocities: np.ndarray,
@@ -289,10 +303,14 @@ def animate_sampling(
     alpha: float | None = None,
     date: str | None = None,
     cmap_state: str = "RdBu_r",
-    cmap_velocity: str = "RdBu_r",
+    cmap_velocity: str = "PuOr",
     cmap_physical: str | object = "precip",
+    physical_ticks: list[float] | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
+    state_lim: float | None = None,
+    velocity_lim: float | None = None,
+    n_levels: int = 15,
     out_path: str | None = None,
     fps: int = 10,
     frame_stride: int = 1,
@@ -318,7 +336,14 @@ def animate_sampling(
         cmap_state: Colormap for the state panel
         cmap_velocity: Colormap for the velocity panel
         cmap_physical: Colormap for the physical state panel
+        physical_ticks: Colourbar ticks for the physical panel. Defaults to all bounds for a
+            discrete colourmap.
         vmin/vmax: Physical colour limits. Ignored for custome discrete colourmaps.
+        state_lim: Fixed half-range of the normalised state colour scale. Defaults to the
+            99.5th percentile of |x|, rounded up to the nearest 0.5.
+        velocity_lim: As `state_lim`, for the velocity panel.
+        n_levels: Number of discrete colour levels for the state and velocity panels (use an
+            odd number so zero sits in a central bin).
         out_path: Path to save the animation (.gif)
         fps: Frames per second for the animation
         frame_stride: Stride between frames to include in the animation
@@ -340,8 +365,14 @@ def animate_sampling(
         phys = phys * 86400
         units = "mm day-1"
 
-    x_lim = float(np.percentile(np.abs(x), 99.5))
-    v_lim = float(np.percentile(np.abs(v), 99.5))
+    def nice_limit(arr: np.ndarray, step: float = 0.5) -> float:
+        return max(step, float(np.ceil(np.percentile(np.abs(arr), 99.5) / step) * step))
+
+    x_lim = state_lim if state_lim is not None else nice_limit(x)
+    v_lim = velocity_lim if velocity_lim is not None else nice_limit(v)
+
+    x_cmap, x_norm = make_discrete_symmetric_norm(x_lim, n_levels, cmap_state)
+    v_cmap, v_norm = make_discrete_symmetric_norm(v_lim, n_levels, cmap_velocity)
 
     phys_cmap, phys_norm = resolve_cmap(cmap_physical)
 
@@ -360,24 +391,30 @@ def animate_sampling(
     ax_t = fig.add_subplot(gs[1, 0])
     ax_phys = fig.add_subplot(gs[1, 1], projection=proj)
 
-    def make_map(ax, data, title, label, **kwargs):
+    def make_map(ax, data, title, label, extend="neither", ticks=None, **kwargs):
         mesh = ax.pcolormesh(lon, lat, data, transform=proj, shading="auto", **kwargs)
         ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
         gl = ax.gridlines(draw_labels=True, alpha=0.05, color="black")
         gl.top_labels = False
         gl.right_labels = False
         ax.set_title(title)
-        fig.colorbar(mesh, ax=ax, orientation="horizontal", pad=0.08, shrink=0.8, label=label)
+        fig.colorbar(
+            mesh, ax=ax, orientation="horizontal", pad=0.08, shrink=0.8,
+            label=label, extend=extend, ticks=ticks, format="%g",
+        )
         return mesh
 
     mesh_x = make_map(
-        ax_x, x[0], r"Normalised state $x_t$", "normalised", cmap=cmap_state, vmin=-x_lim, vmax=x_lim,
+        ax_x, x[0], r"Normalised state $x_t$", "normalised",
+        extend="both", ticks=np.linspace(-x_lim, x_lim, 5), cmap=x_cmap, norm=x_norm,
     )
     mesh_v = make_map(
-        ax_v, v[0], r"Predicted velocity $v_t$", "normalised / unit time", cmap=cmap_velocity, vmin=-v_lim, vmax=v_lim,
+        ax_v, v[0], r"Predicted velocity $v_t$", "normalised / unit time",
+        extend="both", ticks=np.linspace(-v_lim, v_lim, 5), cmap=v_cmap, norm=v_norm,
     )
     mesh_phys = make_map(
-        ax_phys, phys[0], f"Physical state ({variable})", units or "", **phys_kwargs,
+        ax_phys, phys[0], f"Physical state ({variable})", units or "",
+        ticks=physical_ticks, **phys_kwargs,
     )
 
     # Progress panel
@@ -408,7 +445,7 @@ def animate_sampling(
         dot.set_data([i], [times[i]])
         trail.set_data(steps[: i + 1], times[: i + 1])
         prefix = f"{date}   " if date else ""
-        fig.suptitle(f"{prefix}step {i}/{n_steps}   t = {times[i]:.3f}")
+        fig.suptitle(f"{prefix}step {i:>3d}/{n_steps}   t = {times[i]:.3f}")
         return mesh_x, mesh_v, mesh_phys, dot, trail
 
     anim = mpl_anim.FuncAnimation(

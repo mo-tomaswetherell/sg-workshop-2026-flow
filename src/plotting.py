@@ -286,7 +286,7 @@ def animate_sampling(
     variable: str = "pr",
     target_idx: int = 0,
     units: str | None = None,
-    alpha: str | None = None,
+    alpha: float | None = None,
     date: str | None = None,
     cmap_state: str = "RdBu_r",
     cmap_velocity: str = "RdBu_r",
@@ -331,7 +331,7 @@ def animate_sampling(
     n_steps = len(times) - 1
     x = states[:, target_idx]  # shape (n_steps + 1, lat, lon)
 
-    # repeat penultimate velocity for the final frame
+    # repeat final velocity for the last frame
     v = np.concatenate([velocities[:, target_idx], velocities[-1:, target_idx]], axis=0)  # shape (n_steps + 1, lat, lon)
 
     phys = physical_states[:, target_idx]  # shape (n_steps + 1, lat, lon)
@@ -340,8 +340,8 @@ def animate_sampling(
         phys = phys * 86400
         units = "mm day-1"
 
-    x_lim = max(np.abs(x))
-    v_lim = max(np.abs(v))
+    x_lim = float(np.percentile(np.abs(x), 99.5))
+    v_lim = float(np.percentile(np.abs(v), 99.5))
 
     phys_cmap, phys_norm = resolve_cmap(cmap_physical)
 
@@ -363,7 +363,7 @@ def animate_sampling(
     def make_map(ax, data, title, label, **kwargs):
         mesh = ax.pcolormesh(lon, lat, data, transform=proj, shading="auto", **kwargs)
         ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
-        gl = ax.gridlines(draw_labels=True, alpha=0.05, colr="black")
+        gl = ax.gridlines(draw_labels=True, alpha=0.05, color="black")
         gl.top_labels = False
         gl.right_labels = False
         ax.set_title(title)
@@ -381,7 +381,7 @@ def animate_sampling(
     )
 
     # Progress panel
-    steps = np.arrange(n_steps + 1)
+    steps = np.arange(n_steps + 1)
     ax_t.plot(steps, steps / n_steps, color="grey", ls="--", lw=1, label=r"$\alpha=1$")
     label = rf"$\alpha={alpha:g}$" if alpha is not None else "time steps"
     ax_t.plot(steps, times, color="C0", lw=2, label=label)

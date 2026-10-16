@@ -111,6 +111,63 @@ def plot_field(
 
     plt.show()
 
+
+def plot_predictors(
+    ds: xr.Dataset,
+    variables: list[str],
+    time_idx: int = 0,
+    cmap: str | object = "viridis",
+    ncols: int = 3,
+) -> None:
+    """Plot a subset of predictor fields in a grid, one panel per variable.
+
+    Each panel has its own colourbar, autoscaled to that variable, since the
+    predictors represent different physical quantities with very different ranges.
+
+    Args:
+        ds: Dataset containing the predictor variables.
+        variables: Names of the variables to plot, one panel each.
+        time_idx: Index along the `time` dimension.
+        cmap: Colourmap specification (see `resolve_cmap`), applied to every panel.
+        ncols: Number of columns in the grid.
+    """
+    cmap_obj, norm = resolve_cmap(cmap)
+
+    nrows = math.ceil(len(variables) / ncols)
+    fig, axes = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(4 * ncols, 4 * nrows),
+        subplot_kw={"projection": ccrs.PlateCarree()},
+        squeeze=False,
+        layout="constrained",
+    )
+
+    for idx, ax in enumerate(axes.flat):
+        if idx >= len(variables):
+            ax.set_visible(False)
+            continue
+
+        variable = variables[idx]
+        data = ds[variable].isel(time=time_idx)
+
+        plot_kwargs = dict(
+            ax=ax,
+            transform=ccrs.PlateCarree(),
+            cmap=cmap_obj,
+            add_colorbar=True,
+            cbar_kwargs={"pad": 0.15, "shrink": 0.8},
+        )
+        if norm is not None:
+            plot_kwargs["norm"] = norm
+
+        data.plot(**plot_kwargs)
+        ax.set_title(variable)
+        ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
+        ax.gridlines(draw_labels=True, alpha=0.05, color="black")
+
+    plt.show()
+
 def plot_target_vs_predictions(
     ds: xr.Dataset,
     time_idx: int,
@@ -201,7 +258,7 @@ def plot_target_vs_predictions(
         if is_target:
             gl.top_labels = False
             gl.right_labels = False
-        
+
     fig.colorbar(
         mappable,
         ax=axes,
@@ -215,8 +272,3 @@ def plot_target_vs_predictions(
     fig.suptitle(str(target["time"].dt.strftime("%Y-%m-%d").values))
 
     plt.show()
-        
-    
-
-    
-        

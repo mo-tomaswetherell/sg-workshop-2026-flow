@@ -109,7 +109,7 @@ validation:
 
 test:
   date_ranges:
-    - ["2050-01-01", "2059-12-31"]
+    - ["2050-01-01", "2050-01-10"] # typically ["2050-01-01", "2059-12-31"], reduced for the demo
 
 
 model:

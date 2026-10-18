@@ -409,7 +409,7 @@ def animate_sampling(
         extend="both", ticks=np.linspace(-x_lim, x_lim, 5), cmap=x_cmap, norm=x_norm,
     )
     mesh_v = make_map(
-        ax_v, v[0], r"Predicted velocity $v_t$", "normalised / unit time",
+        ax_v, v[0], r"Predicted velocity $u_{\theta}(x_t,t;c)$", "normalised / unit time",
         extend="both", ticks=np.linspace(-v_lim, v_lim, 5), cmap=v_cmap, norm=v_norm,
     )
     mesh_phys = make_map(

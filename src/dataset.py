@@ -4,11 +4,13 @@ See https://www.mss-int.sg/v3-climate-projections/learn-about-v3/v3-explained
 """
 
 import logging
+from collections.abc import Sequence
 
 import torch
 import numpy as np
 import xarray as xr
 
+from src.dates import select_date_ranges
 from src.transforms import Transform
 from src.config.schema import FlowMatchingConfig, CoupledSourceConfig
 
@@ -26,7 +28,7 @@ class V3Dataset(torch.utils.data.Dataset):
         predictors_path: str,
         targets_path: str,
         config: FlowMatchingConfig,
-        years: list[int],
+        date_ranges: Sequence[tuple[str, str]],
         transforms: dict[str, dict[str, Transform]],
         static_path: str | None = None,
     ):
@@ -37,18 +39,20 @@ class V3Dataset(torch.utils.data.Dataset):
             predictors_path: Path to the base directory containing the predictor zarr stores.
             targets_path: Path to the base directory containing the target zarr stores.
             config: Flow matching configuration.
-            years: List of years to include in the dataset.
+            date_ranges: Inclusive date ranges to include in the dataset.
             transforms: Mapping from group name to dictionary of variable name to Transform.
             static_path: Path to netcdf file containing static variables.
 
         Raises:
             ValueError
-                If predictor and targets time indicies are not aligned.
+                If the number of couple variables differs from the number of target variables,
+                if the static variabes are requested without a static_path, or if no timesteps
+                fall within the date ranges (or a date range is incorrectly specified).
         """
         self.predictors_path = predictors_path
         self.targets_path = targets_path
         self.config = config
-        self.years = years
+        self.date_ranges = list(date_ranges)
         self.transforms = transforms
 
         self.predictors: list[str] = list(config.predictors.keys())
@@ -66,7 +70,7 @@ class V3Dataset(torch.utils.data.Dataset):
         # Temporarily open the targets dataset to read the metadata.
         # Note: We don't store this dataset on 'self' to avoid serialising/pickling open file
         # handles when using multiple workers (num_workers > 0 in DataLoader).
-        with self._create_dataset(self.targets, targets_path, years) as temp_targets_ds:
+        with self._create_dataset(self.targets, targets_path, self.date_ranges) as temp_targets_ds:
             self.n_time = temp_targets_ds.sizes["time"]
             self.n_lat = temp_targets_ds.sizes["lat"]
             self.n_lon = temp_targets_ds.sizes["lon"]
@@ -166,23 +170,32 @@ class V3Dataset(torch.utils.data.Dataset):
         if self.ds_predictors is None:
             # Creating file handle for the datasets. This only happens once per worker.
             self.ds_predictors = self._create_dataset(
-                self.predictors, self.predictors_path, self.years
+                self.predictors, self.predictors_path, self.date_ranges
             )
-            self.ds_targets = self._create_dataset(self.targets, self.targets_path, self.years)
+            self.ds_targets = self._create_dataset(
+                self.targets, self.targets_path, self.date_ranges
+                )
             if self.source:
-                self.ds_source = self._create_dataset(self.source, self.predictors_path, self.years)
+                self.ds_source = self._create_dataset(
+                    self.source, self.predictors_path, self.date_ranges
+                )
 
-    def _create_dataset(self, variables: list[str], base_path: str, years: list[int]) -> xr.Dataset:
+    def _create_dataset(
+            self, variables: list[str], base_path: str, date_ranges: Sequence[tuple[str, str]]
+    ) -> xr.Dataset:
         """Return an xarray dataset containing the specified variables.
 
         Args:
             variables: List of variable names to include in the dataset.
             base_path: Path to the base directory containing the variable zarr files.
-            years: List of years to include in the dataset.
+            date_ranges: Inclusive date ranges to include in the dataset.
 
         Returns:
             ds: Dataset containing the specified variables, concatenated along the "variable"
-                dimension, and filtered to the specified years.
+                dimension, and filtered to the specified date ranges.
+
+        Raises:
+            ValueError: If no timesteps fall within the date ranges.
         """
         ds_vars_list: list[xr.DataArray] = []
         for var in variables:
@@ -190,7 +203,7 @@ class V3Dataset(torch.utils.data.Dataset):
             ds = xr.open_zarr(path, consolidated=True, chunks=None)
             ds_vars_list.append(ds[var])
         ds = xr.merge(ds_vars_list)
-        ds = ds.sel(time=ds.time.dt.year.isin(years))
+        ds = select_date_ranges(ds, date_ranges)
         return ds
 
     def _get_sample(

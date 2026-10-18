@@ -73,8 +73,8 @@ SchedulerConfig = Annotated[
 
 
 class TrainingConfig(BaseModel):
-    years: list[str]
-    """List of year range strings (e.g., "1961-1970") or individual year strings (e.g., "2032")."""
+    date_ranges: list[tuple[str, str]]
+    """list of inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
     learning_rate: float
     epochs: int
@@ -112,13 +112,13 @@ class TrainingConfig(BaseModel):
 
 
 class ValidationConfig(BaseModel):
-    years: list[str]
-    """List of year range strings (e.g., "1961-1970") or individual year strings (e.g., "2032")."""
+    date_ranges: list[tuple[str, str]]
+    """list of inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
 
 class TestConfig(BaseModel):
-    years: list[str]
-    """List of year range strings (e.g., "1961-1970") or individual year strings (e.g., "2032")."""
+    date_ranges: list[tuple[str, str]]
+    """list of inclusive [start, end] date ranges, each 'YYYY-MM-DD' or 'YYYY-MM-DD-HH:MM'."""
 
 
 class ModelConfig(BaseModel):

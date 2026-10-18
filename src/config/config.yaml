@@ -98,8 +98,8 @@ training:
     - ["2080-01-01", "2099-12-31"]
   learning_rate: 1.0e-4
   epochs: 1 # typically 500; reduced to 1 for the demo
-  batch_size: 128
-  gradient_accumulation_steps: 1
+  batch_size: 16
+  gradient_accumulation_steps: 8
   patience: 50
   ema_decay: 0.999
 

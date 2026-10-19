@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q ai
+#PBS -l select=1:ngpus=1
+#PBS -l walltime=2:00:00
+#PBS -P <projectId>
+#PBS -N jupyter
+#PBS -j oe
+
+# Launch JupyterLab on a GPU compute node for the flow matching demo.
+# Before submitting, set -P above to your NSCC project ID.
+
+cd "$PBS_O_WORKDIR" || exit $?
+
+# Pick a random port and record the SSH tunnel command to run locally
+PORT=$(shuf -i 8000-8999 -n 1)
+echo -e "ssh -N -L $PORT:$(hostname):$PORT $USER@aspire2a.nus.edu.sg\n" >> "sshtunnel.$PBS_JOBID"
+
+module load miniforge3
+conda activate sg-fm-demo
+
+jupyter lab --no-browser --ip=0.0.0.0 --port="$PORT" \
+    >> "sshtunnel.$PBS_JOBID" 2> "jpylab.$PBS_JOBID"

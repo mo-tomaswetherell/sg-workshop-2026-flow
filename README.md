@@ -16,7 +16,7 @@ GPU build anyway:
 
 ```bash
 module load miniforge3
-CONDA_OVERRIDE_CUDA="12.4" conda env create -f requirements.yaml
+CONDA_OVERRIDE_CUDA="12.8" conda env create -f requirements.yaml
 ```
 
 > Set the `CONDA_OVERRIDE_CUDA` value to match (or be below) the CUDA version

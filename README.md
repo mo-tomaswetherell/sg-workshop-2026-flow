@@ -79,7 +79,7 @@ in the directory you submitted from (on the login node): `sshtunnel.<jobid>`
    cat jpylab.12345.pbs101       # on the login node
    ```
 
-   Copy the `http://localhost:<PORT>/?token=...` line into your browser.
+   Copy the `http://127.0.0.1:<PORT>/lab?token=...` line into your browser.
 
 Then open [`notebooks/training.ipynb`](notebooks/training.ipynb) or
 [`notebooks/inference.ipynb`](notebooks/inference.ipynb) and select the

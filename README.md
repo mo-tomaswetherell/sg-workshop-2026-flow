@@ -10,11 +10,26 @@ Flow matching demo for the CCRS workshop.
 ### 1. Create the conda environment (login node)
 
 After connecting to ASPIRE2A, load conda and build the environment from the
-provided file:
+provided file. The login node has no GPU, so conda-forge would otherwise install
+a CPU-only build of PyTorch — `CONDA_OVERRIDE_CUDA` tells the solver to pick the
+GPU build anyway:
 
 ```bash
 module load miniforge3
-conda env create -f requirements.yaml
+CONDA_OVERRIDE_CUDA="12.4" conda env create -f requirements.yaml
+```
+
+> Set the `CONDA_OVERRIDE_CUDA` value to match (or be below) the CUDA version
+> reported by `nvidia-smi` on a GPU node. If you'd rather not guess, create the
+> environment from inside an interactive GPU session instead (see step 2), where
+> CUDA is detected automatically and the override is not needed.
+
+Then activate the environment and register it as a Jupyter kernel so the
+`sg-fm-demo` kernel the notebooks expect appears in JupyterLab:
+
+```bash
+conda activate sg-fm-demo
+python -m ipykernel install --user --name sg-fm-demo --display-name sg-fm-demo
 ```
 
 > Note: do not run `conda init` or add it to `~/.bashrc` on ASPIRE2A — NSCC

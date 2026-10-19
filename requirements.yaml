@@ -8,6 +8,7 @@ dependencies:
   - matplotlib=3.10
   - pandas=2.3
   - pytorch=2.10
+  - pytorch-gpu=2.10
   - scikit-learn=1.8
   - xarray=2026.1
   - mlflow=3.9

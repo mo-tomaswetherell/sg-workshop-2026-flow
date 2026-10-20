@@ -100,3 +100,7 @@ Then open [`notebooks/training.ipynb`](notebooks/training.ipynb) or
       ```bash
    qdel <jobid>
    ```
+
+---
+
+See the [codebase](https://github.com/mo-tomaswetherell/mo-flow-sg) associated with our paper 'Flow Matching for Convective-Scale Precipitation Downscaling'. 

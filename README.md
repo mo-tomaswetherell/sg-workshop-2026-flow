@@ -65,7 +65,7 @@ in the directory you submitted from (on the login node): `sshtunnel.<jobid>`
    This shows one line, for example:
 
    ```bash
-   ssh -N -L 8541:asp2a-gpu003:8541 yourId@aspire2a.nus.edu.sg
+   ssh -N -L 8541:asp2a-gpu003:8541 yourId@aspire2a.nscc.sg
    ```
 
 2. In a **separate terminal that is *not* logged into the HPC** (a plain local
@@ -88,3 +88,15 @@ Then open [`notebooks/training.ipynb`](notebooks/training.ipynb) or
 > For quick testing/debugging you can instead grab an interactive GPU session
 > with `qsub -I -l select=1:ngpus=1 -l walltime=1:00:00 -q ai -P <projectId>`
 > and launch `jupyter lab` from there.
+
+4. At the end of the demo, save your notebooks. In the tunnel terminal 
+   (from step 2), end the connection:
+      
+      ```bash
+   ctrl+c
+   ```
+
+   In the login node terminal:
+         ```bash
+   qdel <jobid>
+   ```

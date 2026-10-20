@@ -2,7 +2,7 @@
 #PBS -q ai
 #PBS -l select=1:ngpus=1
 #PBS -l walltime=2:00:00
-#PBS -P <projectId>
+#PBS -P 17001770
 #PBS -N jupyter
 #PBS -j oe
 
@@ -13,7 +13,7 @@ cd "$PBS_O_WORKDIR" || exit $?
 
 # Pick a random port and record the SSH tunnel command to run locally
 PORT=$(shuf -i 8000-8999 -n 1)
-echo -e "ssh -N -L $PORT:$(hostname):$PORT $USER@aspire2a.nus.edu.sg\n" >> "sshtunnel.$PBS_JOBID"
+echo -e "ssh -N -L $PORT:$(hostname):$PORT $USER@aspire2a.nscc.sg\n" >> "sshtunnel.$PBS_JOBID"
 
 module load miniforge3
 conda activate sg-fm-demo

@@ -97,6 +97,6 @@ Then open [`notebooks/training.ipynb`](notebooks/training.ipynb) or
    ```
 
    In the login node terminal:
-         ```bash
+      ```bash
    qdel <jobid>
    ```

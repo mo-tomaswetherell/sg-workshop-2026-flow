@@ -1,8 +1,8 @@
 #!/bin/bash
-#PBS -q ai
+#PBS -q R25699184
 #PBS -l select=1:ngpus=1
 #PBS -l walltime=2:00:00
-#PBS -P 17001770
+#PBS -P 17001770_R2
 #PBS -N jupyter
 #PBS -j oe
 
@@ -16,7 +16,7 @@ PORT=$(shuf -i 8000-8999 -n 1)
 echo -e "ssh -N -L $PORT:$(hostname):$PORT $USER@aspire2a.nscc.sg\n" >> "sshtunnel.$PBS_JOBID"
 
 module load miniforge3
-conda activate sg-fm-demo
+conda activate /home/users/industry/metoffice/04052003/.conda/envs/sg-fm-demo
 
 jupyter lab --no-browser --ip=0.0.0.0 --port="$PORT" \
     >> "sshtunnel.$PBS_JOBID" 2> "jpylab.$PBS_JOBID"

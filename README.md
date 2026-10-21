@@ -7,28 +7,14 @@ Flow matching demo for the CCRS workshop.
 > notebooks (training/inference) must happen on a **GPU compute node** requested
 > through the PBS scheduler — never on the login node.
 
-### 1. Create the conda environment (login node)
+### 1. Activate the conda environment (login node)
 
-After connecting to ASPIRE2A, load conda and build the environment from the
-provided file. The login node has no GPU, so conda-forge would otherwise install
-a CPU-only build of PyTorch — `CONDA_OVERRIDE_CUDA` tells the solver to pick the
-GPU build anyway:
-
-```bash
-module load miniforge3
-CONDA_OVERRIDE_CUDA="12.8" conda env create -f requirements.yaml
-```
-
-> Set the `CONDA_OVERRIDE_CUDA` value to match (or be below) the CUDA version
-> reported by `nvidia-smi` on a GPU node. If you'd rather not guess, create the
-> environment from inside an interactive GPU session instead (see step 2), where
-> CUDA is detected automatically and the override is not needed.
-
-Then activate the environment and register it as a Jupyter kernel so the
+After connecting to ASPIRE2A, load conda. Then activate the environment required for this demo and register it as a Jupyter kernel so the
 `sg-fm-demo` kernel the notebooks expect appears in JupyterLab:
 
 ```bash
-conda activate sg-fm-demo
+module load miniforge3
+conda activate /home/users/industry/metoffice/04052003/.conda/envs/sg-fm-demo
 python -m ipykernel install --user --name sg-fm-demo --display-name sg-fm-demo
 ```
 
@@ -37,9 +23,7 @@ python -m ipykernel install --user --name sg-fm-demo --display-name sg-fm-demo
 
 ### 2. Request a GPU node and start JupyterLab
 
-This repo includes a ready-made batch script, [`jupyter.pbs`](jupyter.pbs). Edit
-the `#PBS -P <projectId>` line to use your NSCC project ID, then submit it and
-check the job:
+This repo includes a ready-made batch script, [`jupyter.pbs`](jupyter.pbs). Submit it and check the job:
 
 ```bash
 qsub jupyter.pbs

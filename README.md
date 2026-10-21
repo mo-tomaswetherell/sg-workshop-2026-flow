@@ -23,11 +23,10 @@ python -m ipykernel install --user --name sg-fm-demo --display-name sg-fm-demo
 
 ### 2. Request a GPU node and start JupyterLab
 
-This repo includes a ready-made batch script, [`jupyter.pbs`](jupyter.pbs). Submit it and check the job:
+This repo includes a ready-made batch script, [`jupyter.pbs`](jupyter.pbs). Submit it and check the job with `qstat`:
 
 ```bash
 qsub jupyter.pbs
-qstat @pbs102
 ```
 
 The script requests one GPU, activates the `sg-fm-demo` environment, and starts

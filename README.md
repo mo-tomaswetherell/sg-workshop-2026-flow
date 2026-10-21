@@ -7,10 +7,16 @@ Flow matching demo for the CCRS workshop.
 > notebooks (training/inference) must happen on a **GPU compute node** requested
 > through the PBS scheduler — never on the login node.
 
+### 0. Clone the repo
+
+After connecting to ASPIRE2A, navigate to the directory where you would like to run the demo. Clone the repository:
+```bash
+git clone https://github.com/mo-tomaswetherell/sg-workshop-2026-flow.git
+```
+
 ### 1. Activate the conda environment (login node)
 
-After connecting to ASPIRE2A, load conda. Then activate the environment required for this demo and register it as a Jupyter kernel so the
-`sg-fm-demo` kernel the notebooks expect appears in JupyterLab:
+Load conda, then activate the environment required for this demo and register it as a Jupyter kernel so the `sg-fm-demo` kernel the notebooks expect appears in JupyterLab:
 
 ```bash
 module load miniforge3
